@@ -1,0 +1,152 @@
+/* webtouch-sdk/public-css/webtouch.css */
+
+/* --- 1. Variables --- */
+:root {
+  --wt-bg: #f3f4f6;
+  --wt-panel-bg: #ffffff;
+  --wt-accent: #2563eb;
+  --wt-text: #111827;
+  --wt-muted: #6b7280;
+  --wt-radius: 0.75rem;
+  --wt-gap: 0.5rem;
+  --wt-border-color: #d1d5db;
+  --wt-border: 1px solid var(--wt-border-color);
+  --wt-input-bg: #f9fafb;
+  --wt-key-bg: #f9fafb;
+  --wt-key-accent-bg: #e5e7eb;
+  --wt-touchpad-border-color: #9ca3af;
+  --wt-cursor-glow: rgba(37, 99, 235, 0.3);
+}
+
+/* --- 2. Global Typography (Restoring the clean look) --- */
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* --- 3. QR Code (Restoring Original Look) --- */
+#qrCodeContainer {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background-color: white;
+  padding: 8px;
+  border: 1px solid #ccc;
+  /* Optional: adds slight rounding to match original vibe */
+  border-radius: 4px; 
+  box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.2);
+  z-index: 500;
+  text-align: center;
+}
+
+#qrCodeContainer p {
+  margin: 0 0 5px 0;
+  font-size: 1.1em;
+  font-weight: bold;
+  text-align: center;
+  color: #333;
+  letter-spacing: 2px;
+}
+
+#qrCodeContainer canvas {
+  display: block;
+  margin: 5px auto 0;
+}
+
+/* HACK: Hide the extra text the SDK adds to get 1:1 parity with original */
+.webtouch-url {
+  display: none !important;
+}
+
+.webtouch-room-label {
+  font-size: 1.2em;
+  /* 1. Make the container bold. This forces the text node (The Code) to be bold. */
+  font-weight: bold; 
+  margin-top: 5px;
+  letter-spacing: 2px;
+}
+
+/* 2. Target the word "Room:" (which is inside a strong tag) and make it normal */
+.webtouch-room-label strong {
+  font-weight: normal; 
+  color: #444; /* Optional: makes the label slightly softer than the black code */
+}
+
+/* --- 4. Remote Cursor (Critical for Visibility) --- */
+#cursor {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: red;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  display: none; /* Hidden until controller connects */
+  z-index: 9999;
+  transition: background-color 0.1s ease, transform 0.1s ease;
+  box-shadow: 0 0 4px rgba(0,0,0,0.3);
+}
+
+#cursor.visible {
+  display: block;
+}
+
+#cursor.clicking {
+  background-color: blue;
+  transform: translate(-50%, -50%) scale(1.3);
+}
+
+/* Hover-only state */
+.manual-hover,
+.webtouch-manual-hover {
+  outline: 2px solid green;
+  outline-offset: 2px;
+}
+
+/* Focus-only state */
+.manual-focus,
+.webtouch-manual-focus {
+  outline: 2px solid blue;
+  outline-offset: 2px;
+  box-shadow: 0 0 5px rgba(0, 0, 255, 0.5);
+}
+
+/* Focus + hover together (slightly stronger) */
+.manual-focus.manual-hover,
+.webtouch-manual-focus.webtouch-manual-hover {
+  outline-color: blue;
+  box-shadow: 0 0 5px rgba(0, 0, 255, 0.5);
+}
+
+
+/* --- 5. Remote Cursor --- */
+/* Use CLASS selector for multi-user support */
+.remote-cursor {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: red;
+  position: absolute;
+  top: 0;
+  left: 0;
+  
+  /* CENTER the cursor logic */
+  transform: translate(-50%, -50%);
+  
+  pointer-events: none;
+  display: none; 
+  z-index: 9999;
+  transition: background-color 0.1s ease, transform 0.1s ease;
+  box-shadow: 0 0 4px rgba(0,0,0,0.3);
+}
+
+.remote-cursor.visible {
+  display: block;
+}
+
+.remote-cursor.clicking {
+  background-color: blue;
+  /* Maintain centering when scaling */
+  transform: translate(-50%, -50%) scale(1.3);
+}

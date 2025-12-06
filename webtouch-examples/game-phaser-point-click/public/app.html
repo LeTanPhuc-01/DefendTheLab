@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Phaser Adventure (Verb + Inventory Control)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Phaser + QRCode -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background-color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #game-container {
+      margin-top: 10px;
+      flex-shrink: 1;
+      max-width: 100%;
+      border: 1px solid #555;
+      cursor: none; /* Hide default mouse cursor */
+    }
+    #qrCodeContainer {
+      background-color: white;
+      padding: 10px;
+      border: 1px solid #ccc;
+      box-shadow: 3px 3px 8px rgba(0,0,0,0.2);
+      margin-top: 10px;
+      z-index: 500;
+      text-align: center;
+    }
+    #qrCodeContainer p {
+      margin: 0 0 5px 0;
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #333;
+      letter-spacing: 3px;
+    }
+    #qrCodeContainer canvas {
+      display: block;
+      margin: 5px auto 0;
+    }
+    #feedbackText {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 10px 15px;
+      border-radius: 5px;
+      font-family: sans-serif;
+      font-size: 1.1em;
+      z-index: 100;
+      display: none;
+      text-align: center;
+      max-width: 80%;
+    }
+    #statusText {
+      position: absolute;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-family: sans-serif;
+      z-index: 100;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="qrCodeContainer"><p>Loading Room...</p></div>
+  <div id="statusText">Connecting...</div>
+  <div id="feedbackText">Placeholder Feedback</div>
+  <div id="game-container"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "webtouch-sdk": "/node_modules/webtouch-sdk/client.js"
+    }
+  }
+  </script>
+
+  <script type="module" src="/js/appMain.js"></script>
+</body>
+</html>

@@ -1,0 +1,251 @@
+/*webtouch-sdk/public-css/webtouchController.css*/
+/* webtouchController.css - generic WebTouch controller shell + modules */
+
+/* Fullscreen mobile-friendly layout */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* Root container used by WebTouchController/BaseController */
+#controller-app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header / status bar */
+
+#statusMessage {
+  padding: 5px;
+  text-align: center;
+  background-color: #dddddd;
+  font-size: 0.9em;
+  flex-shrink: 0;
+}
+
+/* Optional status color variants (BaseController can set classes) */
+.webtouch-status-info {
+  background-color: #e5e7eb;
+  color: #111827;
+}
+
+.webtouch-status-warn {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.webtouch-status-error {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+/* Manual join form */
+
+#manualJoinForm {
+  padding: 12px 16px;
+  text-align: center;
+  background-color: #f0f0f0;
+  border-bottom: 1px solid #cccccc;
+  flex-shrink: 0;
+}
+
+#manualJoinForm label {
+  margin-right: 5px;
+  font-size: 1em;
+}
+
+#manualRoomIdInput {
+  padding: 6px;
+  margin-right: 5px;
+  font-size: 1.1em;
+  text-transform: uppercase;
+  width: 110px;
+  text-align: center;
+  letter-spacing: 3px;
+}
+
+#manualJoinForm button {
+  padding: 6px 12px;
+  font-size: 1em;
+}
+
+/* Modules container: touchpad + tools + keyboard */
+
+#controllerUiWrapper {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  min-height: 0;
+}
+
+/* Touchpad */
+
+#touchSurface {
+  flex-grow: 1;
+  display: block;
+  width: 100%;
+  cursor: crosshair;
+  box-sizing: border-box;
+  position: relative;
+  background-color: #f8f8f8;
+  border-bottom: 1px dashed #aaaaaa;
+  touch-action: none; /* Disables browser gestures like pinch-zoom */
+}
+
+/* Keyboard */
+
+#virtualKeyboard {
+  display: block;
+  width: 100%;
+  background-color: #cccccc;
+  padding: 5px;
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
+  flex-shrink: 0;
+}
+
+.keyboard-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.keyboard-row:last-child {
+  margin-bottom: 0;
+}
+
+.keyboard-key {
+  background-color: #fefefe;
+  border: 1px solid #bbbbbb;
+  border-radius: 5px;
+  padding: 0;
+  margin: 0 1.5px;
+  font-size: 16px;
+  font-weight: 400;
+  cursor: pointer;
+  flex-grow: 1;
+  text-align: center;
+  min-width: 0;
+  height: 40px;
+  line-height: 40px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  white-space: pre;
+  flex-basis: 0;
+}
+
+.keyboard-key:active {
+  background-color: #dddddd;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.key-space { flex-grow: 4; }
+.key-enter { flex-grow: 2; background-color: #b0c4de; }
+.key-backspace { flex-grow: 1.5; background-color: #d3d3d3; }
+.key-shift { flex-grow: 1.5; background-color: #d3d3d3; }
+.key-mode-switch { flex-grow: 1.5; background-color: #d3d3d3; }
+
+.key-shift.active {
+  background-color: #a9a9a9;
+  color: white;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.keyboard-layer {
+  display: none;
+  flex-direction: column;
+}
+
+.keyboard-layer.active {
+  display: flex;
+}
+
+.keyboard-spacer {
+  flex-grow: 8;
+}
+
+/* Drawing tools module (very light styling; you can expand this later) */
+
+.webtouch-drawing-tools-module {
+  padding: 4px 8px;
+  background-color: #f8f8f8;
+  border-bottom: 1px solid #dddddd;
+  flex-shrink: 0;
+}
+
+.dt-tools-row-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.dt-tools-group {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.dt-btn {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #cccccc;
+  background-color: #eeeeee;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.dt-btn-active {
+  background-color: #d1fae5;
+  border-color: #10b981;
+}
+
+.dt-label {
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.dt-size-value {
+  font-size: 0.8rem;
+}
+
+.dt-toggle-pen {
+  width: 100%;
+  margin-top: 4px;
+  padding: 6px;
+  border-radius: 4px;
+  border: 1px solid #bbbbbb;
+  background-color: #f9fafb;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.dt-toggle-on {
+  background-color: #bbf7d0;
+  border-color: #16a34a;
+}
+
+.dt-toggle-off {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.dt-help-card {
+  margin-top: 4px;
+  padding: 4px 6px;
+  font-size: 0.75rem;
+  color: #4b5563;
+}

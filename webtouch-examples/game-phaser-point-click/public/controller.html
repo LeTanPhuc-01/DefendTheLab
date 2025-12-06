@@ -1,0 +1,47 @@
+<!-- public/controller.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Adventure Controller (Verbs)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+
+  <link rel="stylesheet" href="/css/adventureController.css" />
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "webtouch-sdk": "/node_modules/webtouch-sdk/client.js"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="manualJoinForm">
+    <label for="manualRoomIdInput">Room Code:</label>
+    <input type="text" id="manualRoomIdInput" size="4" maxlength="4" />
+    <button id="joinManualButton">Join Game</button>
+  </div>
+
+  <div id="controllerUiWrapper">
+    <div id="touchSurface">
+      <div id="introAnimation">
+        <p>Drag = Move Cursor<br />Tap = Use Action</p>
+      </div>
+    </div>
+    <div id="inventorySection"></div>
+    <div id="fixedActionButtons">
+      <button class="action-verb-button" data-verb="look" disabled>Look</button>
+      <button class="action-verb-button" data-verb="use" disabled>Use</button>
+      <button class="action-verb-button" data-verb="touch" disabled>Touch</button>
+      <button class="action-verb-button" data-verb="open" disabled>Open</button>
+      <button class="action-verb-button" data-verb="pickup" disabled>Pick Up</button>
+      <button class="action-verb-button" data-verb="talk" disabled>Talk</button>
+    </div>
+    <div id="statusMessage">Connecting...</div>
+  </div>
+
+  <script type="module" src="/js/controllerMain.js"></script>
+</body>
+</html>

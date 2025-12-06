@@ -1,0 +1,16 @@
+{
+  "name": "web-touch-game",
+  "version": "1.0.0",
+  "description": "Phaser point-and-click adventure controlled via WebTouch SDK.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "socket.io": "^4.8.1",
+    "webtouch-sdk": "file:../../webtouch-sdk"
+  }
+}

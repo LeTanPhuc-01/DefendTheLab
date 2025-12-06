@@ -1,0 +1,129 @@
+/*webtouch-sdk/public-css/webtouch.css*/
+/* webtouch.css - generic WebTouch chrome for kiosk/public apps */
+
+
+/* Theme variables (can be overridden by the host app) */
+:root {
+  --wt-bg: #f0f0f0;
+  --wt-text: #111827;
+  --wt-cursor-color: #ef4444;   /* red */
+  --wt-cursor-click-color: #3b82f6; /* blue on click */
+  --wt-qr-bg: #ffffff;
+  --wt-qr-border: #cccccc;
+  --wt-qr-shadow: rgba(0, 0, 0, 0.2);
+}
+
+/* Layout */
+
+html {
+  box-sizing: border-box;
+}
+
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--wt-bg);
+  color: var(--wt-text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* App root area */
+#app-root {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* prevent flex overflow */
+}
+
+/* Remote cursor (WebTouch bridge controls this) */
+#cursor {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--wt-cursor-color);
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  display: none;
+  z-index: 9999;
+  transition:
+    background-color 0.1s ease,
+    transform 0.1s ease;
+}
+
+#cursor.visible {
+  display: block;
+}
+
+#cursor.clicking {
+  background-color: var(--wt-cursor-click-color);
+  transform: translate(-50%, -50%) scale(1.3);
+}
+
+/* Manual hover/focus classes used by the DOM bridge */
+
+.webtouch-manual-hover {
+  outline: 2px solid #22c55e; /* green */
+  outline-offset: 2px;
+}
+
+.webtouch-manual-focus {
+  outline: 2px solid #3b82f6; /* blue */
+  outline-offset: 2px;
+  box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+}
+
+/* QR code badge */
+
+#qrCodeContainer {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background-color: var(--wt-qr-bg);
+  padding: 8px;
+  border: 1px solid var(--wt-qr-border);
+  box-shadow: 3px 3px 8px var(--wt-qr-shadow);
+  z-index: 500;
+}
+
+#qrCodeContainer p {
+  margin: 0 0 5px 0;
+  font-size: 1.1em;
+  font-weight: bold;
+  text-align: center;
+  color: var(--wt-text);
+  letter-spacing: 2px;
+}
+
+#qrCodeContainer canvas,
+#qrCodeContainer img {
+  display: block;
+  margin: 5px auto 0;
+}
+
+.webtouch-qr-fallback {
+  font-size: 0.8rem;
+  word-break: break-all;
+  text-align: center;
+}
+
+.webtouch-room-label {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.webtouch-room-label .webtouch-url {
+  margin-top: 2px;
+  font-family: monospace;
+}

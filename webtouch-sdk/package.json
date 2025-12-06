@@ -1,0 +1,53 @@
+{
+  "name": "webtouch-sdk",
+  "version": "0.1.0",
+  "description": "Three-pillar WebTouch framework for pairing public displays with personal controllers.",
+  "type": "module",
+
+  "main": "./index.js",
+
+  "exports": {
+    ".": {
+      "browser": "./client.js",
+      "default": "./index.js"
+    },
+    "./client": "./client.js",
+    "./styles/core": "./public-css/webtouch-core.css",
+    "./styles/controller": "./public-css/webtouch-controller.css",
+    "./styles/qr": "./public-css/webtouch-qr.css"
+  },
+
+  "files": [
+    "lib",
+    "public-js",
+    "public-css",
+    "index.js",
+    "client.js",
+    "README.md"
+  ],
+
+  "sideEffects": [
+    "./public-css/*.css"
+  ],
+
+  "scripts": {
+    "test": "node ./scripts/smoke-test.mjs",
+    "demo:whiteboard": "cd examples/whiteboard && npm install && npm start"
+  },
+
+  "license": "MIT",
+
+  "peerDependencies": {
+    "socket.io": "^4.0.0"
+  },
+
+  "keywords": [
+    "websocket",
+    "socket.io",
+    "remote-control",
+    "kiosk",
+    "controller",
+    "touchpad",
+    "virtual-keyboard"
+  ]
+}

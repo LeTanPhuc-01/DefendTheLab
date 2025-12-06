@@ -1,0 +1,108 @@
+/* public/css/domBridgeApp.css */
+
+/* Box sizing reset (safe to keep here) */
+html {
+  box-sizing: border-box;
+}
+
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+
+/* Page layout; font-family & cursor/QR/focus visuals come from SDK */
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: #f0f0f0;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Layout areas */
+.main-content {
+  padding: 20px;
+  flex-grow: 1;
+}
+
+#inputArea {
+  padding: 20px;
+  background-color: #e0e0e0;
+  border-top: 1px solid #ccc;
+  flex-shrink: 0;
+}
+
+/* Inputs / form */
+
+#inputArea label[for="textField"],
+#inputArea label[for="textArea"] {
+  display: block;
+  margin-bottom: 5px;
+}
+
+#inputArea input[type="text"],
+#inputArea textarea {
+  width: 95%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  font-size: 16px;
+  caret-color: auto;
+}
+
+#inputArea textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.clickable-box {
+  width: 150px;
+  height: 80px;
+  background-color: lightblue;
+  border: 1px solid blue;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.clickable-box:hover {
+  background-color: lightcoral;
+}
+
+.form-group {
+  margin-bottom: 15px;
+  padding: 10px;
+  border: 1px dashed #bbb;
+  border-radius: 4px;
+}
+
+.form-group legend {
+  font-weight: bold;
+  padding: 0 5px;
+}
+
+.form-group label {
+  display: inline-block;
+  margin-right: 15px;
+  margin-bottom: 0;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.form-group input[type="radio"],
+.form-group input[type="checkbox"] {
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+/* Optional helper for label hover if your JS still uses it */
+label.manual-hover-associated {
+  text-decoration: underline;
+  color: green;
+}

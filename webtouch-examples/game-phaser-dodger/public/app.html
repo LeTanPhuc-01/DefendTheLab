@@ -1,0 +1,70 @@
+<!-- public/app.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <title>WebTouch Phaser Dodger (Multiplayer)</title>
+
+  <!-- SDK app chrome (QR, focus helpers) -->
+  <link rel="stylesheet" href="/node_modules/webtouch-sdk/public-css/webtouch.css"/>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background-color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #game-container {
+      margin-top: 10px;
+      flex-shrink: 1;
+      max-width: 100%;
+    }
+    #statusText {
+      position: absolute;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-family: sans-serif;
+      z-index: 100;
+      display: none;
+    }
+  </style>
+
+  <!-- Phaser -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+</head>
+<body>
+  <!-- QR and room label will be managed by SDK bridge logic in JS -->
+  <div id="qrCodeContainer">
+    <p>Loading Room...</p>
+  </div>
+  <div id="statusText">Connecting...</div>
+  <div id="game-container"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "webtouch-sdk": "/node_modules/webtouch-sdk/client.js"
+    }
+  }
+  </script>
+
+  <script type="module" src="/js/appMain.js"></script>
+</body>
+</html>

@@ -1,389 +1,429 @@
-# WebTouch Kiosk – Room-Based Remote Web Controller
+# WebTouch App Kit
 
-This project implements a real-time remote-control system for web pages using **Node.js**, **Express**, and **Socket.IO**. It uses a **room-based hybrid architecture** so that:
+This repo contains the **WebTouch SDK** plus a set of small, focused examples that show how to build rich, dual-screen web experiences:
 
-- Each **viewport app** (`app.html`) runs as an independent instance with its own 4-letter **Room Code**.
-- One or more **controllers** (`controller.html`) can connect to a specific viewport via that Room Code.
-- The **server** acts as a smart relay + state manager, while the **viewport app** handles the actual UI updates for low-latency interaction.
+- A **kiosk / app** running in a desktop browser or on a large display.
+- One or more **phone controllers** that connect via a 4-letter room code and control the app in real time.
 
-The codebase is structured so you can use it as a **instructive module**: where you can keep the WebTouch plumbing as-is and focus on building your own frontend UI on top of it.
+All examples share the same core pieces:
+
+- A Node.js + Express + Socket.IO server running the **WebTouch hub**.
+- A **kiosk app** that uses WebTouch to receive controller input.
+- A **controller app** that uses WebTouch to send touch / key / custom events.
 
 ---
 
-## Directory Structure
+## Repository Layout
 
 ```text
-.
-├─ lib/
-│  └─ webTouchController.js       # Server-side Socket.IO room logic (attachWebTouchController)
-├─ public/
-│  ├─ app.html                    # Demo viewport app (full-page controlled UI)
-│  ├─ controller.html             # Touch controller UI
-│  ├─ css/
-│  │  ├─ webtouch.css             # Shared theme + primitive styles (wt-* classes)
-│  │  ├─ webtouchController.css   # Styles specific to controller.html
-│  │  └─ webtouchViewport.css     # Styles specific to app.html viewport demo
-│  └─ js/
-│     ├─ app.js                   # Viewport app logic (room, QR, cursor, hover/focus)
-│     ├─ controller.js            # Touch controller logic (join form, touchpad, keyboard)
-│     └─ webTouchClient.js        # Browser client wrapper for Socket.IO (app + controller)
-├─ server.js                      # Express + Socket.IO server entrypoint
-├─ package.json
-└─ readme.md
+webtouch-app-kit/
+├─ webtouch-sdk/               # The reusable SDK package
+└─ webtouch-examples/          # Example apps built with the SDK
+   ├─ dom-demo-app/            # DOM bridge demo (single & handoff)
+   ├─ game-phaser-dodger/      # Multiplayer dodge game with Phaser
+   ├─ game-phaser-point-click/ # Phaser adventure with verb/inventory controller
+   └─ whiteboard-app/          # Multi-user whiteboard demo
 ````
 
----
-
-## High-Level Architecture
-
-### Rooms & Codes
-
-* Each `app.html` instance is assigned a 4-letter **Room Code** (e.g., `ABCD`) by the server.
-* The server tracks **per-room state** in memory: app socket, controller sockets, keyboard mode/shift state, last cursor/focus info.
-* Controllers connect to a **specific** room by:
-
-  * Scanning the QR code shown on that app, or
-  * Entering the Room Code manually on `/controller`.
-
-### Hybrid Architecture
-
-The flow is intentionally “hybrid”:
-
-* **Server** (`lib/webTouchController.js`)
-
-  * Validates and relays events **within the correct room**:
-
-    * `cursor_move` (controller → app)
-    * `tap` (controller → app)
-    * `key_input` (controller → app, processed through per-room keyboard state)
-  * Manages room state:
-
-    * `appSocketId`, `controllerSocketIds`
-    * Keyboard mode / shift (`controllerState`)
-    * Last known cursor + focus info for rejoin (`report_cursor_position`, `report_focus_change`)
-  * Handles app and controller connect/reconnect/disconnect logic.
-
-* **Viewport App** (`public/app.html` + `public/js/app.js`)
-
-  * Renders the **full-page demo UI** (text inputs, textarea, radios/checkboxes, clickable box).
-  * Shows its Room Code + QR code in the top-right corner.
-  * Processes relayed events **locally** for responsiveness:
-
-    * Moves the red virtual cursor.
-    * Computes hover (green outline) and focus (blue outline) on DOM elements.
-    * Applies text input changes on key events.
-  * Reports cursor + focus state back to the server so reconnecting apps can restore context.
-
-* **Touch Controller** (`public/controller.html` + `public/js/controller.js`)
-
-  * Renders a **trackpad + soft keyboard** layout, optimized for touch devices.
-  * On load:
-
-    * Reads `?room=CODE` from the URL and attempts to join that room, or
-    * Shows a **manual Room Code entry** form if none is provided.
-  * Sends:
-
-    * Pointer deltas (`cursor_move`)
-    * Taps (`tap`) – single-finger, two-finger, right-click, etc.
-    * Key presses (`key_input`) from the multi-layer keyboard (letters / numbers / symbols).
-  * Receives `update_controller_state` to keep its keyboard mode/shift UI in sync with the server’s room state.
+Each example is a small, self-contained Node app with its own `package.json`, `server.js`, and `public/` folder.
 
 ---
 
-## Core Modules
+## The WebTouch SDK (core)
 
-### 1. Server-Side: `lib/webTouchController.js`
+The SDK itself lives in `webtouch-sdk/` and is published as a package named `webtouch-sdk`. It provides:
 
-This module encapsulates all Socket.IO room logic. It exports:
+* **Server-side**:
+
+  ```js
+  import { attachWebTouchHub } from "webtouch-sdk";
+
+  const io = new Server(httpServer, { /* ... */ });
+  attachWebTouchHub(io, { debug: true });
+  ```
+
+  `attachWebTouchHub` handles:
+
+  * Room creation (short 4-letter codes)
+  * One app + many controllers per room
+  * Controller → app events (`controller_event`) with `controllerId`
+  * App → controller broadcast/unicast events
+
+* **App-side client** (`createAppClient`):
+
+  ```js
+  import { createAppClient } from "webtouch-sdk";
+
+  const client = createAppClient();
+
+  client.onConnected(() => { /* register or rejoin room */ });
+  client.onRoomId((roomId) => { /* got assigned/rejoined room */ });
+
+  client.onCursorMove(({ deltaX, deltaY }, controllerId) => { ... });
+  client.onTap(({ action, payload }, controllerId) => { ... });
+  client.onCustomEvent((name, payload, controllerId) => { ... });
+
+  client.sendEventToControllers({ eventName, payload });
+  ```
+
+* **Controller-side client** (`createControllerClient`):
+
+  ```js
+  import { createControllerClient } from "webtouch-sdk";
+
+  const client = createControllerClient();
+
+  client.joinRoom("ABCD");
+  client.sendCursorMove({ deltaX, deltaY });
+  client.sendTap({ actionVerb, selectedItemId });
+  client.sendCustomEvent({ eventName: "my_event", payload: {...} });
+
+  client.onAppEvent((eventName, payload) => { /* update controller UI */ });
+  ```
+
+* **High-level helpers**:
+
+  * `initWebTouchBridge` – add remote cursor & QR pairing to any existing DOM app.
+  * `BaseController` + `TouchpadModule` + `VirtualKeyboardModule` – quickly build mobile controllers with room join, status bar, touchpad, and keyboard.
+
+See `webtouch-sdk/readme.md` for more detail.
+
+---
+
+## Running the Examples
+
+Each example is independent. From the repo root:
+
+```bash
+cd webtouch-examples/<example-folder>
+npm install
+npm start
+```
+
+The server prints a banner with URLs like:
+
+```text
+🚀 WebTouch Dev Server Running on Port 3000
+[vEthernet ...]: http://192.168.x.x:3000/
+[Wi-Fi ...]   : http://192.168.y.y:3000/
+```
+
+Use the `Wi-Fi` URL from a **desktop browser** for the kiosk app, and the same base URL + `/controller` from your **phone** to join as a controller.
+
+---
+
+## Example 1 – DOM Bridge App (`dom-demo-app/`)
+
+**Path:** `webtouch-examples/dom-demo-app`
+
+This is the simplest “hello world” for WebTouch: it turns a plain HTML form page into a remotely controlled kiosk without changing the form logic.
+
+* **Kiosk app:** `public/app.html`
+  A normal page with a text field, textarea, radios, checkboxes, and a “Click Me!” box.
+
+* **Controller:** `public/controller.html`
+  Uses `BaseController` + `TouchpadModule` + `VirtualKeyboardModule` to:
+
+  * Join a room with a 4-letter code or QR.
+  * Move a remote cursor over the kiosk.
+  * Tap to click and focus elements.
+  * Type into inputs via a virtual keyboard.
+
+* **Server:** `server.js`
+
+  ```js
+  import { attachWebTouchHub } from "webtouch-sdk";
+  attachWebTouchHub(io, { debug: true });
+  ```
+
+* **App wiring:** `public/js/appMain.js`
+
+  ```js
+  import { initWebTouchBridge } from "webtouch-sdk";
+
+  // Regular DOM logic (form submit, click handlers, etc.)
+
+  initWebTouchBridge({
+    cursorElement: document.getElementById("cursor"),
+    qrCodeContainer: document.getElementById("qrCodeContainer"),
+  });
+  ```
+
+**What it demonstrates:**
+
+* How to **add WebTouch to an existing app** without changing its logic.
+* How the app **reuses room codes** via sessionStorage:
+
+  * Open `/app.html`, pair a controller → room code is stored.
+  * Reload or open the app in another tab → the bridge calls `rejoinRoom(previousRoomCode)`.
+  * The same controller can seamlessly control the new tab (handoff).
+
+---
+
+## Example 2 – Multi-user Phaser Dodger (`game-phaser-dodger/`)
+
+**Path:** `webtouch-examples/game-phaser-dodger`
+
+A classic “dodge the falling blocks” game where each controller becomes a player square.
+
+* **Kiosk app:** `public/app.html`
+  Runs a Phaser 3 game (see `public/js/game/PhaserDodgerGame.js`).
+
+* **Controller:** `public/controller.html`
+  Uses `BaseController` + `TouchpadModule` (no keyboard). One tap restarts the game after a hit.
+
+* **Server:** `server.js`
+  Uses `attachWebTouchHub` to manage rooms and controllers.
+
+* **App wiring:** `public/js/appMain.js`
+
+  ```js
+  import { createAppClient } from "webtouch-sdk";
+  import { PhaserDodgerGame } from "./game/PhaserDodgerGame.js";
+
+  const client = createAppClient();
+  const game = new PhaserDodgerGame({ parentId: "game-container" });
+
+  client.onRoomId(() => game.start());
+  client.onControllerJoined((controllerId) => game.controllerJoined(controllerId, meta));
+  client.onControllerDisconnected((controllerId) => game.controllerLeft(controllerId));
+  client.onCursorMove(({ deltaX, deltaY }, controllerId) => {
+    game.cursorMove(controllerId, deltaX, deltaY);
+  });
+  client.onTap(({ }, controllerId) => {
+    game.tap(controllerId);
+  });
+  ```
+
+* **Phaser wrapper:** `PhaserDodgerGame.js`
+  Encapsulates the Phaser `Game` and `GameScene` so the app doesn’t need to know Phaser APIs directly.
+
+**What it demonstrates:**
+
+* Multi-controller support via `controllerId`.
+* How to map WebTouch events into a game engine using a small **adapter class**.
+* Using `onControllerJoined` / `onControllerDisconnected` to start/pause the game based on connected controllers.
+
+---
+
+## Example 3 – Phaser Point-and-Click Adventure (`game-phaser-point-click/`)
+
+**Path:** `webtouch-examples/game-phaser-point-click`
+
+A richer demo that shows **bi-directional control**:
+
+* The **kiosk app** is a small adventure game:
+
+  * Player circle in a 2D scene.
+  * Virtual cursor controlled by phone.
+  * Interactable items (door, orb, key, coin) with `look`, `pickup`, `touch`, `use`, `open`, `talk` actions.
+  * An inventory and description text area.
+
+* The **controller** is a custom UI:
+
+  * A big touchpad (cursor control).
+  * A scrollable inventory strip with items (emoji + names).
+  * A row of verb buttons (`Look`, `Use`, `Touch`, `Open`, `Pick Up`, `Talk`).
+  * Buttons enable/disable dynamically based on what the app says is possible at the current hover.
+
+* **Server:** `server.js`
+  Uses `attachWebTouchHub` (no game-specific state on the server).
+
+### App wiring: `public/js/appMain.js`
 
 ```js
-const { attachWebTouchController } = require('./lib/webTouchController');
+import { createAppClient } from "webtouch-sdk";
+import { PhaserPointClickGame } from "./game/PhaserPointClickGame.js";
 
-attachWebTouchController(io, {
-  // optional configuration
-  debug: true,          // enable console logging
-  defaultSensitivity: 2 // scale for cursor movement deltas
+const client = createAppClient();
+const game = new PhaserPointClickGame({
+  parentId: "game-container",
+  onUiStateChange: (state) => {
+    // { hoverInfo, inventory, activeInventoryItem }
+    client.sendEventToControllers({
+      eventName: "adventure_ui_state",
+      payload: state,
+    });
+  },
+  onDescriptionChange: (text) => {
+    client.sendEventToControllers({
+      eventName: "adventure_description",
+      payload: { text },
+    });
+  },
+});
+
+client.onRoomId(() => game.start());
+client.onControllerPresenceChanged(({ controllerCount }) => {
+  game.controllerCountChanged(controllerCount);
+});
+client.onCursorMove(({ deltaX, deltaY }) => {
+  game.cursorMove(deltaX, deltaY);
+});
+client.onTap(({ actionVerb, selectedItemId }, controllerId) => {
+  game.tap(controllerId, { actionVerb, selectedItemId });
+});
+client.onCustomEvent((eventName, payload, controllerId) => {
+  switch (eventName) {
+    case "adventure_select_inventory_item":
+      game.controllerSelectedItem(controllerId, payload.itemId);
+      break;
+    case "adventure_request_inventory_description":
+      game.controllerRequestedDescription(controllerId, payload.itemId);
+      break;
+  }
 });
 ```
 
-Responsibilities:
+### Phaser wrapper + scene: `public/js/game/PhaserPointClickGame.js`
 
-* Generates 4-letter **Room Codes** from an alphabet (no external ID libs needed).
-* Manages a `roomStates` Map keyed by Room Code:
+* `PhaserPointClickGame` wraps a Phaser `AdventureScene` and buffers inputs until the scene is ready.
+* `AdventureScene` implements:
 
-  * `appSocketId`
-  * `controllerSocketIds` (Set)
-  * `lastKnownCursor` (x, y, visible)
-  * `lastKnownFocusSelector`, `lastKnownFocusValue`
-  * `controllerState` (keyboardMode, isShiftActive)
-  * `sensitivity` per room
-* Listens for:
+  * `applyCursorDelta` – moves a shared virtual cursor and detects hovered items.
+  * `handleTapFromController` – applies verbs and default movement, interacts with items, updates inventory.
+  * `updateControllerStatus` – shows “Waiting for controller…” text.
+  * `_emitUiState` – sends `{ hoverInfo, inventory, activeInventoryItem }` back to the app, which forwards it to controllers.
+  * `_emitDescription` – notifies controllers about descriptive text.
 
-  * `register_app_room`, `rejoin_app_room`
-  * `register_controller_room`
-  * `cursor_move`, `tap`, `key_input` (from controllers)
-  * `report_cursor_position`, `report_focus_change` (from app)
-* Emits:
-
-  * `your_room_id`, `initial_state`, `set_cursor_visibility` (to app)
-  * `invalid_room`, `app_disconnected`, `app_reconnected`, `update_controller_state` (to controllers)
-
-### 2. Browser-Side Client Wrapper: `public/js/webTouchClient.js`
-
-Provides a small, unopinionated API on top of Socket.IO:
+### Controller wiring: `public/js/controllerMain.js`
 
 ```js
-import { createAppClient, createControllerClient } from './js/webTouchClient.js';
+import { createControllerClient } from "webtouch-sdk";
 
-const appClient = createAppClient();
-const controllerClient = createControllerClient();
+const client = createControllerClient();
+
+// join form, status, etc...
+client.onConnected(...);
+client.onJoinSuccess(...);
+
+touchSurface.addEventListener("pointermove", (e) => {
+  // compute deltaX/deltaY
+  client.sendCursorMove({ deltaX, deltaY });
+});
+
+function renderInventory(inventory) {
+  // render items and on click:
+  //  - toggle selectedInventoryItemId
+  //  - client.sendCustomEvent({
+  //       eventName: "adventure_select_inventory_item",
+  //       payload: { itemId: selectedInventoryItemId },
+  //     });
+}
+
+fixedActionButtons.addEventListener("click", (e) => {
+  // set currentActionVerb based on clicked verb button
+});
+
+client.onAppEvent((eventName, payload) => {
+  switch (eventName) {
+    case "adventure_ui_state":
+      // Update inventory and enabled verbs based on hoverInfo
+      break;
+    case "adventure_description":
+      // Show descriptive text on the controller
+      break;
+  }
+});
 ```
 
-* **App client:**
+**What it demonstrates:**
 
-  ```js
-  const client = createAppClient();
-
-  client.registerNewRoom();
-  client.rejoinRoom(roomId);
-
-  client.onConnected(fn);
-  client.onDisconnected(fn);
-  client.onInitialState(fn);
-  client.onCursorMove(fn);             // when server relays controller move
-  client.onTap(fn);                    // when server relays controller tap
-  client.onKeyInput(fn);               // when server relays processed key
-  client.onCursorVisibilityChange(fn); // show/hide remote cursor
-
-  client.reportCursorPosition({ x, y });
-  client.reportFocusChange({ selector, value? });
-  ```
-
-* **Controller client:**
-
-  ```js
-  const client = createControllerClient();
-
-  client.joinRoom(roomCode);
-
-  client.onConnected(fn);
-  client.onDisconnected(fn);
-  client.onInvalidRoom(fn);       // server says room doesn’t exist
-  client.onAppDisconnected(fn);   // app for that room closed
-  client.onAppReconnected(fn);    // app came back
-  client.onControllerStateChange(fn); // keyboard mode/shift
-
-  client.sendCursorMove(deltaX, deltaY);
-  client.sendTap('single_tap' | 'two_finger' | 'pointer_button_right');
-  client.sendKey(key, extra);     // includes ToggleMode / ToggleShift / chars
-  ```
-
-This wrapper lets students build their **own app/ controller UIs** without hand-wiring raw `socket.on/emit` everywhere.
-
-### 3. Demo Viewport App: `public/app.html` + `public/js/app.js`
-
-* Uses `webTouchClient.createAppClient` to:
-
-  * Request a new room or rejoin an existing one (via `sessionStorage`).
-  * Receive `your_room_id`, and generate a QR code pointing to `/controller?room=CODE` using the `qrcode` CDN library.
-  * Process relayed `cursor_move`, `tap`, and `key_input` events.
-
-* Handles:
-
-  * Virtual cursor rendering & movement.
-  * Hit-testing elements under the cursor (using `document.elementFromPoint`).
-  * Distinguishing hover vs focus vs click for labels/inputs/radios/checkboxes.
-  * Manual hover/focus visuals (`manual-hover`, `manual-focus` classes).
-  * Remote typing into focused inputs/textareas (Backspace, Enter, characters).
-
-### 4. Touch Controller: `public/controller.html` + `public/js/controller.js`
-
-* Uses `webTouchClient.createControllerClient` to:
-
-  * Join a room via URL param (`?room=CODE`) or manual form.
-  * Emit pointer deltas and taps from the touch surface.
-  * Emit key input events from the on-screen keyboard (letters / numbers / symbols).
-
-* UI:
-
-  * Controller layout styled via `webtouchController.css`.
-  * Intro overlay animation demonstrating drag on first interaction.
-  * Soft keyboard with:
-
-    * Shift (⇧)
-    * Mode switches (?123 / ABC / symbols)
-    * Backspace, Enter, Space
-  * Status messages for “Connecting…”, “Invalid room”, “App disconnected”, etc.
+* **App → controller** data flow: app publishes semantic UI state (`hoverInfo`, `inventory`, `activeInventoryItem`) using `sendEventToControllers`.
+* **Controller → app** actions: controller sends structured events (`sendTap`, `sendCustomEvent`) instead of raw clicks.
+* A more complex UI pattern (verbs + inventory) driven entirely by the app’s semantics.
 
 ---
 
-## CSS Layers
+## Example 4 – Multi-user Whiteboard (`whiteboard-app/`)
 
-To keep things modular:
+**Path:** `webtouch-examples/whiteboard-app`
 
-* `public/css/webtouch.css`
-  Shared `wt-*` utilities and theming primitives (e.g., used by any future WebTouch UIs).
+A multi-user drawing app where multiple controllers can draw on a shared whiteboard:
 
-* `public/css/webtouchController.css`
-  Layout + styles specific to the controller page (`controller.html`):
-  touch surface, manual join form, keyboard rows/keys, intro animation.
+* **Kiosk app:** `public/app.html` + `public/js/app/WhiteboardDemoApp.js`
+* **Controller:** `public/controller.html` + `public/js/controller/WhiteboardDemoController.js`
+* **App wiring:** `public/js/appMain.js` uses `WebTouchApp` + `WebTouchController` from the SDK for a more structured, MVC-style integration.
+* **Server:** `server.js` uses `attachWebTouchHub` just like the other examples.
 
-* `public/css/webtouchViewport.css`
-  Layout + styles specific to the viewport demo (`app.html`):
-  full-page layout, QR badge, `main-content`, `inputArea`, manual hover/focus classes, etc.
+**What it demonstrates:**
 
-Students can:
+* Multi-user freehand drawing with per-controller cursors.
+* Using `WebTouchApp` / `WebTouchController` abstractions to keep controller logic and app logic cleanly separated.
+* A more “framework-like” use of the SDK (custom app/controller classes).
 
-* Use your styles as-is, or
-* Swap in their own CSS that keeps the same IDs/class hooks used by `app.js` / `controller.js`.
-
----
-
-## Running the Demo Locally
-
-### 1. Install dependencies
-
-From the project root:
-
-```bash
-npm install
-```
-
-(Minimal dependencies: `express`, `socket.io`. The QRCode library is loaded via CDN in `app.html`.)
-
-### 2. Start the server
-
-```bash
-node server.js
-# or if you have nodemon:
-# npx nodemon server.js
-```
-
-By default this listens on `http://localhost:3000`.
-
-### 3. Open the viewport app
-
-In a desktop browser:
-
-* Visit: `http://localhost:3000/`
-* You’ll see:
-
-  * A full-page UI with a “Click Me” box and a form.
-  * A **QR badge** in the top-right showing a 4-letter Room Code and a QR code pointing to `/controller?room=CODE`.
-
-### 4. Connect a controller
-
-On a phone/tablet (same network):
-
-* **Option A – QR Code:**
-  Scan the QR from the app page. It will open `/controller?room=CODE`.
-
-* **Option B – Manual Code:**
-  Go to `http://<your-machine-ip>:3000/controller` and type in the Room Code shown on the app.
-
-Once joined:
-
-* A red cursor should appear on the app screen.
-* Dragging on the controller’s touch area moves the cursor.
-* Tapping triggers clicks & focus.
-* Using the on-screen keyboard types into the focused field on the app.
+See `whiteboard-app/readme.md` for full details.
 
 ---
 
-## Using WebTouch in Your Own App (For Students)
+## Learning Path for Students
 
-You can treat this repo as a **starter library**:
+1. **Start with `dom-demo-app`:**
 
-1. **Server side**
+   * Understand room creation, QR pairing.
+   * See how `initWebTouchBridge` can wrap any existing page.
 
-   In your own Express app, after creating a Socket.IO server:
+2. **Move to `game-phaser-dodger`:**
+
+   * Learn how to use `createAppClient` and `createControllerClient`.
+   * Understand `controllerId` and multi-player wiring.
+
+3. **Study `game-phaser-point-click`:**
+
+   * See how the app can drive controller UI state.
+   * Learn to use `sendEventToControllers` and `onAppEvent` with custom `eventName`s.
+
+4. **Explore `whiteboard-app`:**
+
+   * See a more structured architecture with `WebTouchApp` / `WebTouchController`.
+   * Think about how to build your own app/controller classes on top of the SDK.
+
+---
+
+## Developing Your Own WebTouch App
+
+A typical pattern looks like this:
+
+1. **Server** – add the hub:
 
    ```js
-   const { attachWebTouchController } = require('./lib/webTouchController');
+   import { attachWebTouchHub } from "webtouch-sdk";
+   const io = new Server(httpServer, { /* ... */ });
+   attachWebTouchHub(io, { debug: true });
+   ```
 
-   attachWebTouchController(io, {
-     debug: false,
-     defaultSensitivity: 2.0,
+2. **Kiosk app** – choose an approach:
+
+   * Use `initWebTouchBridge` to control an existing DOM page, *or*
+   * Use `createAppClient()` and map `onCursorMove` / `onTap` / `onCustomEvent` into your own app logic.
+
+3. **Controller app** – either:
+
+   * Compose `BaseController` + `TouchpadModule` + `VirtualKeyboardModule` for a generic pointer/keyboard controller, *or*
+   * Use `createControllerClient()` and build a custom UI (like the adventure controller).
+
+4. **Data + semantics** – push down semantic events and UI state:
+
+   ```js
+   // From app:
+   client.sendEventToControllers({
+     eventName: "my_app_state",
+     payload: { ... },
+   });
+
+   // From controller:
+   client.sendCustomEvent({
+     eventName: "my_action",
+     payload: { ... },
    });
    ```
 
-   Keep your existing routes (`/`, `/api/...`) as normal.
+From there, you can mix and match patterns from the examples depending on whether you’re building:
 
-2. **Client side – viewport**
+* A single-user kiosk with remote input,
+* A multi-user game,
+* A collaborative tool with persistent UI state,
+* Or something entirely new.
 
-   In your HTML:
+Happy building!
 
-   ```html
-   <script src="/socket.io/socket.io.js"></script>
-   <script type="module" src="/js/app.js"></script>
-   ```
-
-   In `app.js`, either:
-
-   * Reuse the provided `public/js/app.js` and tweak the DOM it targets, or
-   * Build your own with:
-
-     ```js
-     import { createAppClient } from './webTouchClient.js';
-
-     const client = createAppClient();
-     client.registerNewRoom();
-
-     client.onCursorMove(({ deltaX, deltaY }) => {
-       // move your own cursor / highlight
-     });
-
-     client.onTap(() => {
-       // decide how a “tap” manipulates your app
-     });
-
-     client.onKeyInput(({ key }) => {
-       // handle text input in your UI
-     });
-     ```
-
-3. **Client side – controller**
-
-   In your controller page:
-
-   ```html
-   <script src="/socket.io/socket.io.js"></script>
-   <script type="module" src="/js/controller.js"></script>
-   ```
-
-   Or write your own controller logic using:
-
-   ```js
-   import { createControllerClient } from './webTouchClient.js';
-
-   const client = createControllerClient();
-   client.joinRoom('ABCD'); // or from URL/form
-   client.sendCursorMove(dx, dy);
-   client.sendTap();
-   client.sendKey('a');
-   ```
-
-This separation lets students focus on building **interesting UIs** while relying on a stable WebTouch networking layer.
-
----
-
-## Troubleshooting
-
-* **Controller says “Invalid room”**
-
-  * Make sure the Room Code matches exactly (4 letters).
-  * Ensure the app page is open and has already registered its room.
-
-* **No cursor appears on the app**
-
-  * Confirm the controller successfully joined (no “Invalid room”).
-  * Check browser console on both app and controller pages for errors.
-  * Verify that the app includes `socket.io.js` and `app.js` correctly.
-
-* **Typing doesn’t appear in the app inputs**
-
-  * Ensure a text input or textarea is focused on the app when typing.
-  * Check that `key_input` events are received in the app console.
-  * Make sure the CSS classes for `manual-focus` haven’t been removed/renamed.
-
----

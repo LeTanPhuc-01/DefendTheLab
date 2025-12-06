@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Touch Controller</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="/node_modules/webtouch-sdk/public-css/webtouchController.css">
+</head>
+<body>
+  <div id="controller-app"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "webtouch-sdk": "/node_modules/webtouch-sdk/client.js"
+    }
+  }
+  </script>
+
+  <script type="module" src="/js/controllerMain.js"></script>
+</body>
+</html>
