@@ -1,0 +1,44 @@
+import express from 'express';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+import { attachWebTouchHub, printDevBanner } from 'webtouch-sdk';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+const httpServer = createServer(app);
+
+const io = new Server(httpServer, {
+    cors: {
+        origin: '*',
+        methods: ['GET', 'POST'],
+    },
+});
+
+// Attach WebTouch hub from the SDK
+attachWebTouchHub(io, { debug: true });
+
+// 1. Serve public assets (HTML, CSS, JS)
+app.use(express.static(path.join(__dirname, 'public')));
+
+// 2. Serve node_modules so the browser can load webtouch-sdk/client.js
+app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
+
+// Routes
+app.get('/', (_req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'app.html'));
+});
+
+app.get('/controller', (_req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'controller.html'));
+});
+
+const PORT = process.env.PORT || 3000;
+
+httpServer.listen(PORT, '0.0.0.0', () => {
+    printDevBanner(PORT);
+});
