@@ -22,7 +22,7 @@ export { createControllerStore } from './public-js/controller/controllerStore.js
 // Modules
 export { TouchpadModule } from './public-js/controller/TouchpadModule.js';
 export { VirtualKeyboardModule } from './public-js/controller/VirtualKeyboardModule.js';
-export { DrawingpadModule } from './public-js/controller/DrawingPadModule.js';
+export { DrawingpadModule } from './public-js/controller/DrawingpadModule.js';
 
 // -----------------------------------------------------------------------------
 // Low-Level Clients

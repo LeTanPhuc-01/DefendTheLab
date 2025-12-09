@@ -9,7 +9,7 @@
 export { attachWebTouchHub } from './lib/webTouchHub.js';
 
 // Dev utility for testing phones on IP of localhost
-export { printDevBanner } from './lib/devUtils.js'; 
+export { printDevBanner } from './lib/devUtils.js';
 
 // -----------------------------------------------------------------------------
 // Kiosk / public app pillar (browser)

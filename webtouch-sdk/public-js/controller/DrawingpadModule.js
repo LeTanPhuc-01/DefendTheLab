@@ -6,10 +6,10 @@ export class DrawingpadModule {
   constructor({ controllerClient, parent, store }) {
     if (!controllerClient) throw new Error('DrawingPadModule: client required');
     if (!parent) throw new Error('DrawingPadModule: parent required');
-    
+
     this.client = controllerClient;
     this.parent = parent;
-    this.store = store || null; 
+    this.store = store || null;
     this.unsubscribeStore = null;
 
     // Internal State
@@ -17,15 +17,15 @@ export class DrawingpadModule {
       mode: 'draw',       // 'draw' | 'type' | 'erase' | 'pan'
       color: '#000000',
       lineWidth: 4,
-      isPenToggled: false 
+      isPenToggled: false
     };
 
     // Tracking State
     this.activePointers = new Map();
     this.activeStrokeIds = new Map();
-    this.isLocked = false;         
-    this.isMomentaryDraw = false;  
-    
+    this.isLocked = false;
+    this.isMomentaryDraw = false;
+
     // Gesture State
     this.touchStartCount = 0;
     this.touchStartTime = 0;
@@ -47,7 +47,7 @@ export class DrawingpadModule {
     this._cacheDom();
     this._attachToolbarListeners();
     this._attachPadListeners();
-    
+
     this._syncUi();
     this._broadcastAll();
 
@@ -85,8 +85,8 @@ export class DrawingpadModule {
     container.className = 'webtouch-drawing-pad';
     container.style.display = 'flex';
     container.style.flexDirection = 'column';
-    container.style.flexGrow = '1'; 
-    container.style.height = '100%'; 
+    container.style.flexGrow = '1';
+    container.style.height = '100%';
 
     container.innerHTML = `
       <!-- Toolbar -->
@@ -158,7 +158,7 @@ export class DrawingpadModule {
     this.sizeInput = root.querySelector('[data-role="size-input"]');
     this.undoBtn = root.querySelector('[data-role="undo-btn"]');
     this.clearBtn = root.querySelector('[data-role="clear-btn"]');
-    
+
     this.padSurface = root.querySelector('#dpTrackpad');
     this.padHint = root.querySelector('#dpPadHint');
     this.toggleBtn = root.querySelector('#dpToggleBtn');
@@ -195,20 +195,20 @@ export class DrawingpadModule {
 
     this.toggleBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      
+
       // Type Mode: Momentary click action
       if (this.state.mode === 'type') {
-         if (navigator.vibrate) navigator.vibrate(50);
-         const id = `type-${Date.now()}`;
-         this.client.sendCustomEvent({ eventName: 'draw:strokeStart', payload: { id, tool: 'type' } });
-         setTimeout(() => this.client.sendCustomEvent({ eventName: 'draw:strokeEnd', payload: { id } }), 50);
-         return;
+        if (navigator.vibrate) navigator.vibrate(50);
+        const id = `type-${Date.now()}`;
+        this.client.sendCustomEvent({ eventName: 'draw:strokeStart', payload: { id, tool: 'type' } });
+        setTimeout(() => this.client.sendCustomEvent({ eventName: 'draw:strokeEnd', payload: { id } }), 50);
+        return;
       }
 
       this.state.isPenToggled = !this.state.isPenToggled;
       this._syncUi();
       this._updateStore();
-      
+
       if (this.state.isPenToggled) {
         if (navigator.vibrate) navigator.vibrate(50);
         this._broadcastStrokeStart('main-toggle');
@@ -224,7 +224,7 @@ export class DrawingpadModule {
       btn.style.backgroundColor = (btn.dataset.mode === this.state.mode) ? '#d1fae5' : '#eeeeee';
       btn.style.borderColor = (btn.dataset.mode === this.state.mode) ? '#10b981' : '#cccccc';
     });
-    
+
     this.colorInput.value = this.state.color;
     this.sizeInput.value = this.state.lineWidth;
 
@@ -235,9 +235,9 @@ export class DrawingpadModule {
       btn.style.color = "white";
       btn.style.border = "2px solid #d97706";
     } else if (this.state.mode === 'type') {
-      btn.textContent = "CLICK TO EDIT TEXT"; 
-      btn.style.background = "#8b5cf6"; 
-      btn.style.color = "white"; 
+      btn.textContent = "CLICK TO EDIT TEXT";
+      btn.style.background = "#8b5cf6";
+      btn.style.color = "white";
       btn.style.border = "2px solid #7c3aed";
     } else {
       const active = this.state.isPenToggled || this.isMomentaryDraw;
@@ -265,7 +265,7 @@ export class DrawingpadModule {
     // Pointer Lock (Requires global listeners)
     pad.addEventListener('dblclick', async () => {
       if (!this.isLocked) {
-        try { await pad.requestPointerLock(); } catch(e){}
+        try { await pad.requestPointerLock(); } catch (e) { }
       } else document.exitPointerLock();
     });
 
@@ -325,8 +325,8 @@ export class DrawingpadModule {
 
   _handleDown(e) {
     e.preventDefault();
-    try { this.padSurface.setPointerCapture(e.pointerId); } catch(err){}
-    
+    try { this.padSurface.setPointerCapture(e.pointerId); } catch (err) { }
+
     this.activePointers.set(e.pointerId, {
       prevX: e.clientX, prevY: e.clientY,
       startX: e.clientX, startY: e.clientY,
@@ -366,7 +366,7 @@ export class DrawingpadModule {
       this.isMomentaryDraw = true;
       this._syncUi();
     }
-    
+
     if ((this.state.isPenToggled || this.isMomentaryDraw) && !this.activeStrokeIds.has(e.pointerId)) {
       this._broadcastStrokeStart(e.pointerId);
     }
@@ -407,7 +407,7 @@ export class DrawingpadModule {
 
     const strokeId = `str-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     this.activeStrokeIds.set(key, strokeId);
-    
+
     let tool = this.state.mode === 'erase' ? 'eraser' : 'pen';
     if (this.state.mode === 'pan') tool = 'pan';
 
@@ -440,11 +440,11 @@ export class DrawingpadModule {
   // ---------------------------------------------------------------------------
   // 5. Store Logic
   // ---------------------------------------------------------------------------
-  
+
   _initStore() {
     // 1. Register Slice
     this.store.registerSlice(TOOLS_SLICE, this.state);
-    
+
     // 2. Subscribe (Bi-Directional Sync)
     this.unsubscribeStore = this.store.subscribe(TOOLS_SLICE, (newState) => {
       // Merge updates from external sources (e.g. Unicast event from Kiosk)
