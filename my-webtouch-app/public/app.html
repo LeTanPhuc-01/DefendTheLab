@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Defend The Lab</title>
+
+    <link rel="stylesheet" href="/src/styles/styles.css">
+    <link rel="stylesheet" href="/node_modules/webtouch-sdk/public-css/webtouch.css">
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" crossorigin="anonymous"></script>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "webtouch-sdk": "/node_modules/webtouch-sdk/client.js"
+        }
+    }
+    </script>
+
+    <script src="/src/game_logic/phaser/phaser.js"></script>
+
+    <script src="/src/game_logic/wall/Wall.js"></script>
+    <script src="/src/game_logic/virus/Virus.js"></script>
+    <script src="/src/utils/InitialMenu.js"></script>
+    <script src="/src/utils/PauseMenu.js"></script>
+    <script src="/src/game_logic/world/WorldScene.js"></script>
+
+    <style>
+        /* === MAIN LAYOUT === */
+        body,
+        html {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            overflow: hidden;
+            display: block !important;
+            /* Override styles.css flex */
+        }
+
+        .main-layout {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        #game-container {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* CURSOR */
+        #cursor {
+            pointer-events: none;
+            z-index: 9999;
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: rgba(74, 222, 128, 0.6);
+            border: 2px solid #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 15px rgba(74, 222, 128, 0.8);
+            display: none;
+            /* Hidden until active */
+            transition: transform 0.05s ease-out;
+        }
+
+        #cursor.active {
+            display: block;
+        }
+
+        #cursor.clicking {
+            transform: translate(-50%, -50%) scale(0.8);
+            background: #fff;
+        }
+
+        /* === CONNECTION PANEL === */
+        #connectionPanel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 220px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #4ade80;
+            border-radius: 12px;
+            padding: 15px;
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(74, 222, 128, 0.2);
+        }
+
+        #connectionPanel h3 {
+            margin: 0 0 10px 0;
+            color: #4ade80;
+            text-transform: uppercase;
+            font-size: 16px;
+        }
+
+        /* INITIAL MENU OVERLAY */
+        #initial-menu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            /* Let clicks pass through to buttons */
+            z-index: 1500;
+            /* Above game, below connection panel */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Enable pointer events for the menu content */
+        #initial-menu>* {
+            pointer-events: auto;
+        }
+
+        .info-row {
+            margin-bottom: 5px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .highlight {
+            font-weight: bold;
+            color: #fff;
+            font-size: 18px;
+            display: block;
+            margin-top: 2px;
+        }
+
+        /* QR CODE IMAGE CONTAINER */
+        #qrImage {
+            margin-top: 10px;
+            background: white;
+            padding: 5px;
+            border-radius: 4px;
+            width: 140px;
+            height: 140px;
+            display: block;
+        }
+
+        /* HIDE DEFAULT SDK WIDGETS */
+        .webtouch-widget,
+        .wt-widget,
+        #wt-container {
+            display: none !important;
+        }
+
+        .heart {
+            font-size: 24px;
+            transition: opacity 0.2s;
+        }
+
+        .heart.empty {
+            opacity: 0.3;
+            filter: grayscale(100%);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="main-layout">
+        <div id="game-container"></div>
+
+        <!-- HUD Elements -->
+        <div id="health-hud" style="position: absolute; top: 10px; left: 10px; z-index: 1000; display: none; gap: 5px;">
+            <div id="heart-1" class="heart full">❤️</div>
+            <div id="heart-2" class="heart full">❤️</div>
+            <div id="heart-3" class="heart full">❤️</div>
+            <div id="heart-4" class="heart full">❤️</div>
+            <div id="heart-5" class="heart full">❤️</div>
+        </div>
+
+        <div id="ocr-container" style="position: absolute; bottom: 10px; left: 10px; z-index: 1000; color: white;">
+        </div>
+
+        <div id="ocr-data-buffer" style="display: none;"></div>
+
+        <div id="pauseGame-menu"></div>
+
+        <div id="cursor" class="webtouch-cursor"></div>
+
+        <div id="sdk-sink" style="display: none;"></div>
+
+        <div id="connectionPanel">
+            <h3>Join Game</h3>
+            <div class="info-row">
+                <span>Room Code:</span>
+                <span id="roomCodeText" class="highlight">Loading...</span>
+            </div>
+            <div class="info-row">
+                <span>Scan to Play:</span>
+                <img id="qrImage" alt="Scan QR Code" />
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/js/appMain.js"></script>
+    <script src="/src/game_logic/game.js"></script>
+</body>
+
+</html>

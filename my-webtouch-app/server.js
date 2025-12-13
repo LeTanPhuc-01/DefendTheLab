@@ -104,6 +104,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 // 2. Serve node_modules so the browser can load webtouch-sdk/client.js
 app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
 
+// 3. Serve src and docs for game assets and logic
+app.use('/src', express.static(path.join(__dirname, 'src')));
+app.use('/docs', express.static(path.join(__dirname, 'docs')));
+
 // Routes
 app.get('/', (_req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'app.html'));
