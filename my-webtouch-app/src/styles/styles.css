@@ -1,86 +1,100 @@
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  /* overflow: hidden; */
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background-color: #f0f2f5;
-  padding-top: 50px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* overflow: hidden; */
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #f0f2f5;
+    padding-top: 50px;
 }
 
-h1 { color: #333; }
+h1 {
+    color: #333;
+}
 
 .container {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  text-align: center;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    text-align: center;
 }
 
 /* The Canvas */
 canvas {
-  border: 2px solid #333;
-  border-radius: 4px;
-  cursor: crosshair;
-  background-color: white; /* Important: Paper is white */
-  touch-action: none; /* Prevents scrolling on mobile while drawing */
+    border: 2px solid #333;
+    border-radius: 4px;
+    cursor: crosshair;
+    background-color: white;
+    /* Important: Paper is white */
+    touch-action: none;
+    /* Prevents scrolling on mobile while drawing */
 }
 
 .controls {
-  margin-top: 15px;
-  display: flex;
-  gap: 10px;
-  justify-content: center;
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
 }
 
 button {
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background 0.2s;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.2s;
 }
 
-button:hover { background-color: #0056b3; }
-button.clear-btn { background-color: #dc3545; }
-button.clear-btn:hover { background-color: #a71d2a; }
+button:hover {
+    background-color: #0056b3;
+}
+
+button.clear-btn {
+    background-color: #dc3545;
+}
+
+button.clear-btn:hover {
+    background-color: #a71d2a;
+}
 
 /* The Result Display */
 #result-box {
-  margin-top: 20px;
-  padding: 15px;
-  background-color: #e9ecef;
-  border-radius: 8px;
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #e9ecef;
+    border-radius: 8px;
 }
 
 .prediction {
-  font-size: 4rem;
-  font-weight: bold;
-  color: #28a745;
-  margin: 0;
-  line-height: 1;
+    font-size: 4rem;
+    font-weight: bold;
+    color: #28a745;
+    margin: 0;
+    line-height: 1;
 }
 
 .confidence {
-  color: #6c757d;
-  font-size: 0.9rem;
+    color: #6c757d;
+    font-size: 0.9rem;
 }
-#container {
-  position:relative;
-  width: 500px;
-}
-#sketchpad {
-  border: 5px solid #077;
 
-  /* Transition */
-  transition: opacity 1s linear; 
-  opacity: 1;
+#container {
+    position: relative;
+    width: 500px;
+}
+
+#sketchpad {
+    border: 5px solid #077;
+
+    /* Transition */
+    transition: opacity 1s linear;
+    opacity: 1;
 }
 
 /* Helper class for fading animation. */
@@ -89,16 +103,17 @@ button.clear-btn:hover { background-color: #a71d2a; }
 }
 
 #thumbnail {
-  border: 1px solid #077;
+    border: 1px solid #077;
 }
+
 #result {
-  font-size: 128pt;
-  float: right;
-  width: 120px;
-  height: 280px;
-  border: 5px solid #fff;
-  text-align: center;
-  line-height: 280px;
+    font-size: 128pt;
+    float: right;
+    width: 120px;
+    height: 280px;
+    border: 5px solid #fff;
+    text-align: center;
+    line-height: 280px;
 }
 
 /* Utilities */
@@ -125,11 +140,12 @@ button.clear-btn:hover { background-color: #a71d2a; }
     overflow: hidden;
 }
 
-#game-container canvas { 
-    position: absolute; 
+#game-container canvas {
+    position: absolute;
     top: 0;
     left: 0;
-    z-index: 100;        /* Low Index -> Background layer. */
+    z-index: 100;
+    /* Low Index -> Background layer. */
     display: block;
     width: 100%;
     height: 100%;
@@ -157,7 +173,7 @@ button.clear-btn:hover { background-color: #a71d2a; }
 }
 
 .panel-title {
-    color:#ffffff;
+    color: #ffffff;
     font-size: 1.25rem;
     font-weight: 700;
     margin-bottom: 1rem;
@@ -187,29 +203,37 @@ button.clear-btn:hover { background-color: #a71d2a; }
 
 /* Menus Styling */
 .initial-menu {
-    position: absolute; 
-    top: 12rem;
-    left: 30rem;
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center; 
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     z-index: 104;
     font-family: Arial, sans-serif;
+    pointer-events: none;
+}
+
+.initial-menu>* {
+    pointer-events: auto;
 }
 
 .initial-menu-button-container {
-    background-color: rgba(10, 20, 30, 0.95); 
-    padding: 30px 50px; 
-    border-radius: 12px; 
-    box-shadow: 0 8px 15px rgba(0,0,0,0.7); 
-    display: flex; 
-    flex-direction: column; 
+    background-color: rgba(10, 20, 30, 0.95);
+    padding: 30px 50px;
+    border-radius: 12px;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
     gap: 15px;
     min-width: 280px;
     border: 2px solid #4ade80;
-    width: 20rem; 
-    max-width: 85%; /* Responsive on small screens. */ 
+    width: 20rem;
+    max-width: 85%;
+    /* Responsive on small screens. */
 }
 
 .arcade-text {
@@ -218,55 +242,67 @@ button.clear-btn:hover { background-color: #a71d2a; }
 }
 
 .pause-menu {
-    position: absolute; 
-    bottom: 4rem;
-    left: 30rem;
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center; 
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     z-index: 104;
     font-family: Arial, sans-serif;
+    pointer-events: none;
+}
+
+.pause-menu>* {
+    pointer-events: auto;
 }
 
 .controls-menu {
-    position: absolute; 
-    top: 15rem;
-    left: 17rem;
-    width: 50rem;
-    height: 20rem;
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center; 
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     z-index: 102;
     font-family: Arial, sans-serif;
+    pointer-events: none;
+}
+
+.controls-menu>* {
+    pointer-events: auto;
 }
 
 .controls-menu-container {
-    position: absolute;
-    background-color: rgba(10, 20, 30, 0.95); 
-    padding: 1rem 1rem; 
-    border-radius: 12px; 
-    box-shadow: 0 8px 15px rgba(0,0,0,0.7); 
-    display: flex; 
-    flex-direction: column; 
+    position: relative;
+    background-color: rgba(10, 20, 30, 0.95);
+    padding: 1rem 1rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
     gap: 0.1rem;
     min-width: 10rem;
     border: 2px solid #4ade80;
-    width: 40rem; 
-    height: 43rem;
-    max-width: 85%; /* Responsive on small screens. */ 
+    width: 40rem;
+    height: auto;
+    max-height: 90vh;
+    max-width: 85%;
+    /* Responsive on small screens. */
 }
 
 .session-name-prompt {
-    position: absolute; 
-    top: 14rem;
-    left: 35rem;
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center; 
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     z-index: 103;
     font-family: Arial, sans-serif;
 }
@@ -281,21 +317,21 @@ button.clear-btn:hover { background-color: #a71d2a; }
     height: 10rem;
     padding: 0.375rem;
     box-sizing: border-box;
-    
-    background-color: rgba(10, 20, 30, 0.9); 
-    
+
+    background-color: rgba(10, 20, 30, 0.9);
+
     border: 0.25rem solid #7a7a7a;
     border-radius: 0.75rem;
-    
+
     box-shadow: 0 0 0 0.25rem #222,
-    inset 0 0 0 0.125rem rgba(255, 255, 255, 0.2),
-    0 0.625rem 1.875rem rgba(0, 0, 0, 0.5);
-    
+        inset 0 0 0 0.125rem rgba(255, 255, 255, 0.2),
+        0 0.625rem 1.875rem rgba(0, 0, 0, 0.5);
+
     position: relative;
 }
 
 .dialog-speaker {
-    color: #f59e0b; 
+    color: #f59e0b;
     font-size: 1.375rem;
     font-weight: bold;
     font-family: 'Garamond', 'Georgia', serif;
@@ -323,9 +359,12 @@ button.clear-btn:hover { background-color: #a71d2a; }
 
 #talk-portrait {
     /* Prevents the browser from smoothing the pixels */
-    image-rendering: pixelated;       /* Standard for Chrome/Edge/modern browsers */
-    image-rendering: -moz-crisp-edges; /* Firefox specific */
-    image-rendering: crisp-edges;      /* Standard future compatibility */
+    image-rendering: pixelated;
+    /* Standard for Chrome/Edge/modern browsers */
+    image-rendering: -moz-crisp-edges;
+    /* Firefox specific */
+    image-rendering: crisp-edges;
+    /* Standard future compatibility */
 
     width: 8rem;
     height: 8rem;
@@ -337,9 +376,12 @@ button.clear-btn:hover { background-color: #a71d2a; }
 
 /* Animation for bounding effect of chat box arrow. */
 @keyframes bounce {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: translateY(0);
     }
+
     50% {
         transform: translateY(-0.5rem);
     }

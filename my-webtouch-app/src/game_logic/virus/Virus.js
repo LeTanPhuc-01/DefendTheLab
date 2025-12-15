@@ -33,14 +33,17 @@ class Virus extends Phaser.Physics.Arcade.Sprite {
         this.scene.physics.add.existing(this);
 
         // Generate a random number for the virus
-        this.value = Phaser.Math.Between(1, 256);
+        this.value = Phaser.Math.Between(1, 100);
         let labelText = "";
 
         if (this.type === Virus.virusType.BIN) {
+            // labelText = this.value; // TestBinary
             labelText = this.value.toString(2).padStart(4, '0'); // Binary
         } else if (this.type === Virus.virusType.HEX) {
+            // labelText = "0x" + this.value; // TestHex
             labelText = "0x" + this.value.toString(16).toUpperCase(); // Hex
         } else {
+            // labelText = "0o" + this.value; // TestOctal
             labelText = "0o" + this.value.toString(8); // Octal
         }
 

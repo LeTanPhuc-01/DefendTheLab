@@ -9,7 +9,7 @@ class WorldScene extends Phaser.Scene {
 
     // Level attributes.
     level = 1;
-    virusSpeed = 40; // Will increase as rounds pass by.
+    virusSpeed = 15; // Will increase as rounds pass by.
     isGameRunning = false; // Flag to track game state
 
     // Virus stats attributes.
@@ -74,6 +74,14 @@ class WorldScene extends Phaser.Scene {
         this.nextRoundTimeout = null;
         this.isGameRunning = false;
 
+        // Score Init
+        this.score = 0;
+        this.scoreValues = {
+            "BIN": 2,
+            "OCT": 8,
+            "HEX": 12
+        };
+
         this.create_animations();           // We create the animations before anything else.
         this.create_map();                  // Main function that will create the map.
         this.create_buffer();
@@ -117,12 +125,21 @@ class WorldScene extends Phaser.Scene {
     create_layout(hide) {
         this.heartsMenu = document.getElementById("health-hud");
         this.drawingBoard = document.getElementById("ocr-container");
+        this.scoreHUD = document.getElementById("score-hud");
+        this.levelHUD = document.getElementById("level-hud");
+
         if (hide) {
             if (this.heartsMenu) this.heartsMenu.style.display = "none";
             if (this.drawingBoard) this.drawingBoard.style.display = "none";
+            if (this.scoreHUD) this.scoreHUD.style.display = "none";
+            if (this.levelHUD) this.levelHUD.style.display = "none";
         } else {
             if (this.heartsMenu) this.heartsMenu.style.display = "flex";
             if (this.drawingBoard) this.drawingBoard.style.display = "block";
+            if (this.scoreHUD) this.scoreHUD.style.display = "block";
+            if (this.levelHUD) this.levelHUD.style.display = "block";
+            this.updateScoreHUD();
+            this.updateLevelHUD();
         }
     }
 
@@ -190,25 +207,36 @@ class WorldScene extends Phaser.Scene {
         this.isGameRunning = true; // Start the game logic
 
         if (window.setControllerMode) {
-            window.setControllerMode('drawing');
+            window.setControllerMode('GAME');
         }
     }
 
     // Auxiliar function to end the game when wall broken.
-    gameOver() {
+    gameOver(submitScore = true) {
+        // Submit Score
+        if (submitScore && this.username && this.score > 0) {
+            fetch('/api/score', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: this.username, newScore: this.score })
+            }).then(res => res.json())
+                .then(data => console.log("Score submitted:", data))
+                .catch(err => console.error("Error submitting score:", err));
+        }
+
         // 1. Stop all game activity
         this.isGameRunning = false; // Stop game logic immediately
         this.scene.pause();
 
         // Clear any pending spawn timeouts
         if (this.spawnTimeouts) {
-            this.spawnTimeouts.forEach(id => clearTimeout(id));
+            this.spawnTimeouts.forEach(timer => timer.remove());
             this.spawnTimeouts = [];
         }
 
         // Clear next round timeout
         if (this.nextRoundTimeout) {
-            clearTimeout(this.nextRoundTimeout);
+            this.nextRoundTimeout.remove();
             this.nextRoundTimeout = null;
         }
 
@@ -224,7 +252,9 @@ class WorldScene extends Phaser.Scene {
 
         // 4. Reset Game State
         this.health = this.max_health;
+        this.score = 0;
         this.level = 1;
+        this.virusSpeed = 15;
         this.virusesToSpawn = 0;
         this.waitingForNextRound = false;
         this.active_viruses.clear(true, true); // Remove all viruses
@@ -252,7 +282,7 @@ class WorldScene extends Phaser.Scene {
             const targetVirus = this.active_viruses.getChildren().find(virus => virus.value == number);
 
             if (targetVirus) {
-                this.removeVirus(targetVirus);
+                this.removeVirus(targetVirus, true);
             }
 
         } else {
@@ -277,6 +307,18 @@ class WorldScene extends Phaser.Scene {
                     heartElement.classList.add('empty');
                 }
             }
+        }
+    }
+
+    updateScoreHUD() {
+        if (this.scoreHUD) {
+            this.scoreHUD.innerText = `SCORE: ${this.score}`;
+        }
+    }
+
+    updateLevelHUD() {
+        if (this.levelHUD) {
+            this.levelHUD.innerText = `LEVEL: ${this.level}`;
         }
     }
 
@@ -378,17 +420,40 @@ class WorldScene extends Phaser.Scene {
     }
 
     // Function to remove an actual enemy.
-    removeVirus(virus) {
+    removeVirus(virus, destroyedByPlayer = false) {
 
         if (this.active_viruses.contains(virus)) {
-            virus.endVirus();
-            virus = this.active_viruses.remove(virus, true, false);
+
+            // Add score
+            if (destroyedByPlayer && virus.type && this.scoreValues[virus.type]) {
+                this.score += this.scoreValues[virus.type];
+                this.updateScoreHUD();
+            }
+
+            this.active_viruses.remove(virus, true, true);
+            this.virusesToSpawn--;
+
+            // Check if wave is cleared
+            if (this.active_viruses.countActive() === 0 && this.virusesToSpawn <= 0) {
+                this.waitingForNextRound = true;
+                this.nextRoundTimeout = this.time.delayedCall(this.inBetweenRoundTime, () => {
+                    this.level++;
+                    this.createLevelViruses();
+                });
+            }
         }
     }
 
     // Create enemy functions by zones.
     // Tutorial.
     createLevelViruses() {
+        this.updateLevelHUD();
+
+        // Increase virus speed every 3 levels
+        if (this.level % 3 === 0) {
+            this.virusSpeed += 3;
+            console.log(`Speed increased! New Speed: ${this.virusSpeed}`);
+        }
 
         // First, get the amount of viruses to be generated.
         if (this.level <= 3) {
@@ -401,10 +466,10 @@ class WorldScene extends Phaser.Scene {
         this.waitingForNextRound = false;
 
         for (let i = 0; i < numViruses; ++i) {
-            const timeoutId = setTimeout(() => {
+            const timerEvent = this.time.delayedCall(this.getRandomSpawnTime(i + 1), () => {
                 this.spawnVirus();
-            }, this.getRandomSpawnTime(i + 1));
-            this.spawnTimeouts.push(timeoutId);
+            });
+            this.spawnTimeouts.push(timerEvent);
         }
 
         // Restore health.
@@ -547,10 +612,10 @@ class WorldScene extends Phaser.Scene {
 
         if (!this.waitingForNextRound && this.active_viruses.getLength() == 0 && this.virusesToSpawn === 0) {
             this.waitingForNextRound = true;
-            this.nextRoundTimeout = setTimeout(() => {
+            this.nextRoundTimeout = this.time.delayedCall(this.inBetweenRoundTime, () => {
                 ++this.level;
                 this.createLevelViruses();
-            }, this.inBetweenRoundTime);
+            });
         }
 
         this.checkOCRBuffer();

@@ -42,12 +42,12 @@ class InitialMenu extends Phaser.Scene {
     attachButtonListeners() {
         // Set listeners for the buttons.
         this.playBtn = document.getElementById("play-btn");
-        this.seeCodeBtn = document.getElementById("seeCode-btn");
+        this.leaderboardBtn = document.getElementById("leaderboard-btn");
         this.controlsBtn = document.getElementById("controls-btn");
 
         // FIX: Pass the function reference using an arrow function
         if (this.playBtn) this.playBtn.addEventListener("click", () => this.askSessionNameAndStart());
-        if (this.seeCodeBtn) this.seeCodeBtn.addEventListener("click", () => this.seeCode());
+        if (this.leaderboardBtn) this.leaderboardBtn.addEventListener("click", () => this.showLeaderboard());
         if (this.controlsBtn) this.controlsBtn.addEventListener("click", () => this.aboutTheGameAndControls());
     }
 
@@ -62,9 +62,9 @@ class InitialMenu extends Phaser.Scene {
                     <!-- Inner container for the buttons with styling -->
                     <div id="initial-menu-button-container"
                          class="initial-menu-button-container" >
-                        <h1 id="main-title" >DEFEND THE LAB</h1>
+                        <h1 id="main-title" >🛡️ DEFEND THE LAB</h1>
                         <button id="play-btn" class="menu-btn" > Play Game </button>
-                        <button id="seeCode-btn" class="menu-btn" > See Code </button>
+                        <button id="leaderboard-btn" class="menu-btn" > Leaderboard </button>
                         <button id="controls-btn" class="menu-btn" > Controls </button>
                     </div>
                 </div>
@@ -82,18 +82,20 @@ class InitialMenu extends Phaser.Scene {
         self.menuContainer.innerHTML =
             (
                 `
-            <div id="session-name-prompt" class="session-name-prompt">
-                <h4 style="color: white;">What is the name of your character?</h4>
-        
-                <input id="name-input" placeholder="Enter name here..." style="padding: 8px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc;">
-                
-                <p id="username-wrong-alert" style="color: red; margin-bottom: 10px; display: none;"> 
-                    User name must have at least one character that isn't a white space 
-                </p>
+            <div id="initial-menu" class="initial-menu">
+                <div id="session-name-prompt" class="session-name-prompt" style="background: rgba(0, 0, 0, 0.9); padding: 30px; border: 2px solid #4ade80; border-radius: 12px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                    <h4 style="color: white; margin: 0; font-size: 1.2rem;">What is the name of your character?</h4>
             
-                <div>
-                    <button id="cancel-btn" class="menu-btn" >Cancel</button>
-                    <button id="submit-btn" class="menu-btn" ">Submit</button>
+                    <input id="name-input" placeholder="Enter name here..." style="padding: 10px; border-radius: 4px; border: 1px solid #ccc; width: 250px; font-size: 1rem;">
+                    
+                    <p id="username-wrong-alert" style="color: #ef4444; margin: 0; display: none; font-size: 0.9rem;"> 
+                        User name must have at least one character that isn't a white space 
+                    </p>
+                
+                    <div style="display: flex; gap: 15px; margin-top: 5px;">
+                        <button id="cancel-btn" class="menu-btn" style="background: #ef4444;">Cancel</button>
+                        <button id="submit-btn" class="menu-btn">Submit</button>
+                    </div>
                 </div>
             </div>
             `
@@ -147,67 +149,19 @@ class InitialMenu extends Phaser.Scene {
         this.scene.stop(); // Stop this scene.
     }
 
-    // Goes to the github repo of the game.
-    seeCode() {
-        window.location.href = "https://github.com/LeTanPhuc-01/computer-math";
-    }
-
     aboutTheGameAndControls() {
-        this.menuContainer.innerHTML =
-            (
-                `
-            <div id="controls-menu" class="controls-menu">
-                <div id="controls-menu-container" class="controls-menu-container">
-                        
-                    <h1 style="color: white; text-align: center;"> Defend the Lab </h1>
-                    <h2 style="color: #ccc; font-size: 1.2em; text-align: center;">
-                        Decode viruses before they breach the firewall!
-                    </h2>
-                        
-                    <p style="color: white; margin-top: 15px;">
-                        In Defend the Lab, waves of corrupted data viruses attempt to infiltrate
-                        your firewall. Each virus is encoded in a different number system - decode
-                        them into Decimal before they compromise the lab!
-                    </p>
-                        
-                    <h2 style="color: #4ade80; margin-top: 0.8rem; text-align: center;">
-                        Virus Types
-                    </h2>
-                        
-                    <div style="font-family: monospace; padding: 10px; background: #2d3748; border-radius: 4px; line-height: 1.5; color: #fff;">
-                        Green Virus &rarr; Hexadecimal (Base 16) <br>
-                        Yellow Virus &rarr; Binary (Base 2) <br>
-                        Orange Virus &rarr; Octal (Base 8)
-                    </div>
-                        
-                    <h2 style="color: #4ade80; margin-top: 0.8rem; text-align: center;">
-                        Objective
-                    </h2>
-                        
-                    <p style="color: white;">
-                        Convert the virus's N-Base value into a correct Decimal number.
-                        Draw the Decimal answer to neutralize the virus and protect the firewall.
-                    </p>
-                        
-                    <h2 style="color: #4ade80; margin-top: 0.8rem; text-align: center;">
-                        Controls
-                    </h2>
-                        
-                    <div style="font-family: monospace; padding: 10px; background: #2d3748; border-radius: 4px; line-height: 1.5; color: #fff;">
-                        Canvas &rarr; Draw your numeric answer <br>
-                    </div>
-                        
-                    <button id="okay-controls-btn" class="menu-btn"
-                        style="margin-top: 1.5rem; background-color: #4ade80;">
-                        Got it!
-                    </button>
-                </div>
-            </div>
-            `
-            );
+        this.menuContainer.innerHTML = MenuHelpers.getControlsHTML();
 
         // Attach listener for new button.
         this.okayControlsBtn = document.getElementById("okay-controls-btn");
         this.okayControlsBtn.addEventListener("click", () => this.setInitialMenuHTML());
+    }
+
+    async showLeaderboard() {
+        this.menuContainer.innerHTML = MenuHelpers.getLeaderboardHTML();
+
+        document.getElementById("back-btn").addEventListener("click", () => this.setInitialMenuHTML());
+
+        await MenuHelpers.fetchAndRenderLeaderboard("leaderboard-list");
     }
 }

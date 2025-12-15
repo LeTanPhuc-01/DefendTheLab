@@ -178,6 +178,14 @@ client.onCustomEvent((eventName, payload, controllerId) => {
                 worldScene.checkEnemies(payload.digit.toString(), payload.confidence);
             }
         }
+    } else if (eventName === 'pause_game') {
+        console.log("Received pause request from controller");
+        if (window.game) {
+            const worldScene = window.game.scene.getScene('world');
+            if (worldScene && worldScene.sys.settings.active) {
+                worldScene.openPauseMenu();
+            }
+        }
     }
 });
 

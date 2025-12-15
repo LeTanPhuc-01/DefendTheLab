@@ -8,59 +8,134 @@ You are the last line of defense for a lab holding critical national secrets. Da
 
 Your mission is to **decode** these viruses by translating their values into decimal numbers using your controller. Correctly identifying the threat neutralizes the virus before it can penetrate the system.
 
+## 📸 Demo
+
+### 🖥️ Kiosk Display
+| Initial Menu | Core Gameplay |
+| :---: | :---: |
+| <img src="docs/media/demo/kiosk_initial.png" width="100%"> | <img src="docs/media/demo/kiosk_game.png" width="100%"> |
+
+### 📱 Mobile Controller
+| Navigation Mode | Drawing Mode |
+| :---: | :---: |
+| <img src="docs/media/demo/controller_menu.jpg" width="100%"> | <img src="docs/media/demo/controller_game.jpg" width="100%"> |
+
+### 🏆 Leaderboard
+<div align="center">
+  <img src="docs/media/demo/leaderboard.png" width="60%">
+  <br>
+  <em>Global Leaderboard tracking top lab defenders.</em>
+</div>
+
+---
+
 ## 🚀 Install & Run
 
-### 1. Node.js Server (Game Hub)
-1.  **Install Dependencies**
-    ```bash
-    npm install
-    ```
+> **Important:** The Node.js server (Game Hub) and the Python server (AI Model) **must run on the same computer**.
 
-2.  **Start the System**
-    ```bash
-    npm start
-    ```
-    This command launches the Node.js server (Hub) and serves the application at `http://localhost:3000`.
+### 1. Environment Setup
+Create a `.env` file in the root directory (`my-webtouch-app/`) to configure your database and server port.
+
+```env
+MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/defend-the-lab?retryWrites=true&w=majority
+PORT=3000
+```
 
 ### 2. Python Backend (AI Model)
-The game requires a Python backend to process handwriting recognition.
+The game uses a Python Flask server to process handwriting recognition.
 
-1.  **Install Python Dependencies**
+1.  **Navigate to the source directory:**
+    ```bash
+    cd src
+    ```
+
+2.  **Set up a Virtual Environment (Optional but Recommended):**
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # On Windows: venv\Scripts\activate
+    ```
+
+3.  **Install Dependencies:**
     ```bash
     pip install -r requirements.txt
     ```
 
-2.  **Start the Python Server**
+4.  **Start the Python Server:**
     ```bash
-    python src/app.py
+    python app.py
     ```
-    This will start the Flask server on `http://0.0.0.0:5000`.
+    *Runs on `http://0.0.0.0:5000`*
 
-> **Note:** Both the Node.js server and the Python server must be running for the game to work correctly.
+### 3. Node.js Server (Game Hub)
+1.  **Return to the root directory:**
+    ```bash
+    cd ..
+    ```
 
-## ⚙️ How it Works
+2.  **Install Dependencies:**
+    ```bash
+    npm install
+    ```
 
-Defend the Lab is built on a robust "Thick-Server" architecture leveraging the **WebTouch SDK**.
+3.  **Start the Game Server:**
+    ```bash
+    npm run dev
+    ```
+    *Runs on `http://localhost:3000`*
 
-*   **Core Stack**:
-    *   **Node.js & Express**: Handles routing and serves as the central Hub.
-    *   **MongoDB Atlas**: Persists player scores and game data.
-    *   **Python Flask**: Runs the AI Character Recognition model to process handwriting inputs.
-    *   **Phaser**: Renders the game world and handles physics on the main Kiosk display.
+---
+## 🎮 How to Play
 
-*   **Architecture**:
-    The system uses a centralized **Server (Hub)** that orchestrates communication between two asymmetric clients via **Socket.IO** (pre-configured in the `webtouch-sdk`):
-    1.  **WebTouch Kiosk**: The main game screen (TV/Monitor) running the Phaser game engine.
-    2.  **Controller Device**: A mobile interface where players write their answers.
+1.  **Ensure both servers are running** (Python on port 5000, Node on port 3000).
+2.  **Open the Game Kiosk**:
+    *   The game should automatically open in your browser at `http://localhost:3000`.
+3.  **Connect Your Controller**:
+    *   Ensure your **Phone** and **Computer** are on the **same Wi-Fi network**.
+    *   Scan the **QR Code** displayed on the game screen with your phone.
+    *   Your phone will transform into a writing pad.
+4.  **Defend!**:
+    *   Read the number on the virus (Binary, Octal, or Hex).
+    *   Convert it to **Decimal**.
+    *   Write the answer on your phone screen to destroy the virus!
+    ![Controls](docs/media/demo/controls.png)
+*Controls of the Game*
 
-## 📡 API Usage Examples
+---
 
-```bash
-# Example: Submit Score
-curl -X POST http://localhost:3000/api/score \
-     -H "Content-Type: application/json" \
-     -d '{"name": "Admin1", "newScore": 150}'
+## 📂 Project Structure
+
+The project follows a "Thick-Server" architecture. The **Phaser** game logic is located in `src/game_logic/`.
+
+```text
+my-webtouch-app/
+├── docs/               # Documentation and media assets
+├── models/             # Mongoose database models (Player.js)
+├── public/             # Frontend entry points
+│   ├── app.html        # Main Game Kiosk
+│   ├── controller.html # Mobile Controller
+│   └── js/             # Client-side logic
+├── src/                # Game Source Code
+│   ├── app.py          # Python Flask Server (AI Model)
+│   ├── ocr.py          # OCR Logic
+│   ├── requirements.txt # Python Dependencies
+│   ├── game_logic/     # Phaser Game Engine Logic
+│   │   ├── game.js     # Game Config
+│   │   ├── world/      # World Scene
+│   │   ├── virus/      # Virus Logic
+│   │   └── wall/       # Wall Logic
+│   ├── model/          # AI Models (MobileNET)
+│   ├── styles/         # CSS Styles
+│   └── utils/          # Helper Scripts (Menus, etc.)
+├── server.js           # Node.js Express Server (Game Hub)
+├── package.json        # Node.js Dependencies
+└── README.md           # Project Documentation
 ```
 
-## 📚 Developer Documentation
+## ⚙️ Tech Stack
+
+*   **Node.js & Express**: Central Game Hub.
+*   **MongoDB Atlas**: Leaderboard persistence.
+*   **Python Flask**: AI Character Recognition.
+*   **Phaser 3**: Game Engine (located in `src/game_logic/`).
+*   **WebTouch SDK**: Real-time controller-kiosk communication.
 

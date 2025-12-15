@@ -55,12 +55,24 @@ class OCRController extends WebTouchController {
 
         // Create Canvas UI
         this.container.innerHTML = `
-            <div style="position: absolute; top: 20px; width: 100%; text-align: center; color: #4ade80; font-family: sans-serif; pointer-events: none;">
-                Draw a digit (0-9)
+            <button id="pauseBtn" style="position: absolute; top: 20px; right: 20px; padding: 8px 16px; background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid #fff; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 14px; backdrop-filter: blur(4px); z-index: 20;">
+                PAUSE
+            </button>
+
+            <div style="position: absolute; top: 8%; width: 100%; text-align: center; pointer-events: none; z-index: 10;">
+                <h2 style="color: #4ade80; font-family: 'Courier New', monospace; margin: 0; font-size: 24px; text-shadow: 0 0 10px rgba(74, 222, 128, 0.5); letter-spacing: 2px;">INPUT CODE</h2>
+                <p style="color: #94a3b8; font-family: sans-serif; font-size: 12px; margin-top: 4px; letter-spacing: 1px;">DRAW DECIMAL VALUE</p>
             </div>
-            <canvas id="drawingCanvas" width="300" height="300" 
-                style="background: white; touch-action: none; border: 2px solid #4ade80; border-radius: 8px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
-            </canvas>
+
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90vw; height: 90vw; max-width: 400px; max-height: 400px; padding: 3px; background: linear-gradient(180deg, #4ade80 0%, #22d3ee 100%); border-radius: 16px; box-shadow: 0 0 30px rgba(74, 222, 128, 0.2);">
+                <canvas id="drawingCanvas" width="300" height="300" 
+                    style="width: 100%; height: 100%; background: #f1f5f9; border-radius: 13px; touch-action: none; cursor: crosshair; background-image: radial-gradient(#94a3b8 1px, transparent 1px); background-size: 20px 20px;">
+                </canvas>
+            </div>
+
+            <button id="clearBtn" style="position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%); padding: 12px 40px; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 16px; font-weight: bold; letter-spacing: 2px; backdrop-filter: blur(4px); transition: all 0.2s; touch-action: manipulation; box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);">
+                CLEAR
+            </button>
         `;
 
         this.initOCRLogic();
@@ -78,8 +90,8 @@ class OCRController extends WebTouchController {
         const clientReference = this.client;
 
         // Setup Canvas
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // ctx.fillStyle = "white";
+        // ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.strokeStyle = "black";
         ctx.lineWidth = 15;
         ctx.lineCap = "round";
@@ -95,6 +107,47 @@ class OCRController extends WebTouchController {
         canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', stopDrawing);
         canvas.addEventListener('mouseleave', stopDrawing);
+
+        // Clear Button Logic
+        const clearBtn = document.getElementById('clearBtn');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', clearCanvas);
+            clearBtn.addEventListener('touchstart', (e) => {
+                e.stopPropagation(); // Prevent canvas from catching this
+                clearCanvas();
+            }, { passive: false });
+        }
+
+        // Pause Button Logic
+        const pauseBtn = document.getElementById('pauseBtn');
+        if (pauseBtn) {
+            pauseBtn.addEventListener('click', () => {
+                if (clientReference) {
+                    clientReference.sendCustomEvent({
+                        eventName: 'pause_game',
+                        payload: {}
+                    });
+                }
+            });
+            pauseBtn.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+            }, { passive: false });
+        }
+
+        function clearCanvas() {
+            // 1. Clear Visuals
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 2. Stop Timer
+            if (recognitionTimer) {
+                clearTimeout(recognitionTimer);
+                recognitionTimer = null;
+            }
+
+            // 3. Reset State
+            isDrawing = false;
+            ctx.beginPath();
+        }
 
         function getPos(e) {
             const rect = canvas.getBoundingClientRect();
@@ -140,8 +193,7 @@ class OCRController extends WebTouchController {
             recognitionTimer = setTimeout(() => {
                 processMultiDigit().then(() => {
                     // Reset canvas after processing
-                    ctx.fillStyle = "white";
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
                 });
             }, FADE_DURATION);
         }
@@ -165,6 +217,9 @@ class OCRController extends WebTouchController {
             let imgData = bufferCtx.getImageData(0, 0, BUFFER_SIZE, BUFFER_SIZE);
             let grayscaleImg = imageDataToGrayscale(imgData);
             const segments = segmentImageHorizontal(grayscaleImg);
+
+            let finalNumberString = "";
+            let minConfidence = 1.0;
 
             for (let i = 0; i < segments.length; i++) {
                 const seg = segments[i];
@@ -207,18 +262,25 @@ class OCRController extends WebTouchController {
                     const data = await response.json();
                     console.log("OCR Result:", data);
 
-                    if (data.digit !== undefined && clientReference) {
-                        clientReference.sendCustomEvent({
-                            eventName: 'digit_recognized',
-                            payload: {
-                                digit: data.digit,
-                                confidence: data.confidence
-                            }
-                        });
+                    if (data.digit !== undefined) {
+                        finalNumberString += data.digit;
+                        if (data.confidence < minConfidence) minConfidence = data.confidence;
                     }
                 } catch (err) {
                     console.error("OCR Failed:", err);
                 }
+            }
+
+            // Send the FULL number after processing all segments
+            if (finalNumberString.length > 0 && clientReference) {
+                console.log("Sending Final Number:", finalNumberString);
+                clientReference.sendCustomEvent({
+                    eventName: 'digit_recognized',
+                    payload: {
+                        digit: finalNumberString, // Send "15" instead of "1" then "5"
+                        confidence: minConfidence
+                    }
+                });
             }
         }
 
