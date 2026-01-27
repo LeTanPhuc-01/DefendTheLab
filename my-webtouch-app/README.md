@@ -8,8 +8,6 @@ You are the last line of defense for a lab holding critical national secrets. Da
 
 Your mission is to **decode** these viruses by translating their values into decimal numbers using your controller. Correctly identifying the threat neutralizes the virus before it can penetrate the system.
 
-## 📸 Demo
-
 ### 🖥️ Kiosk Display
 | Initial Menu | Core Gameplay |
 | :---: | :---: |
