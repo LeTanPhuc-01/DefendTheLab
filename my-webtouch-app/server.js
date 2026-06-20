@@ -22,7 +22,8 @@ mongoose.connect(process.env.MONGO_URI)
     .then(conn => console.log(`MongoDB Connected: ${conn.connection.host}`))
     .catch(err => {
         console.error(`Error: ${err.message}`);
-        process.exit(1);
+        console.warn("⚠️ Skipping MongoDB connection. Leaderboard will be disabled.");
+        // process.exit(1);
     });
 
 // Middleware to parse JSON bodies

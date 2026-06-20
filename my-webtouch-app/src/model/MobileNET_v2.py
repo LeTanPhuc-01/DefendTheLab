@@ -19,7 +19,7 @@ from torch.utils.data import DataLoader
 import torchvision
 import torchvision.transforms as transforms
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
 import time
@@ -435,15 +435,19 @@ def measure_inference_speed(weights_path=None):
 if __name__ == "__main__":
 
     # 1. Set the Mode
-    MODE = 'train' # 'train' or 'inference'
+    MODE = 'inference' # 'train' or 'inference'
 
     # 2. Define the path for saving/loading
-    WEIGHTS_FILE = 'checkpoints/mnist_best_model.pth'
+    # Determine directory of current script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    # Path to weights folder relative to script
+    WEIGHTS_FILE = os.path.join(script_dir, 'weights', 'mnist_best_model.pth')
 
     if MODE == 'train':
-        # Training will automatically save to 'checkpoints/mnist_best_model.pth'
-        # because the default checkpoint_dir is 'checkpoints'
-        train_model(epochs=50, batch_size=128, lr=0.05, checkpoint_dir='checkpoints')
+        # Training will automatically save to 'weights/mnist_best_model.pth'
+        checkpoint_dir = os.path.join(script_dir, 'weights')
+        os.makedirs(checkpoint_dir, exist_ok=True)
+        train_model(epochs=50, batch_size=128, lr=0.05, checkpoint_dir=checkpoint_dir)
 
     elif MODE == 'inference':
         # Inference will now attempt to load from that file
